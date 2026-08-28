@@ -1,3 +1,10 @@
+import type { TypeBoxTypeProvider } from "@fastify/type-provider-typebox";
+import Fastify, {
+  type FastifyError,
+  type FastifyInstance,
+  type FastifyReply,
+  type FastifyRequest,
+} from "fastify";
 import { HTTP_STATUS, NOT_FOUND_MESSAGE } from "@/constants";
 import exampleRoutes from "@/modules/example/routes";
 import envPlugin from "@/plugins/env";
@@ -6,13 +13,6 @@ import sensiblePlugin from "@/plugins/sensible";
 import swaggerPlugin from "@/plugins/swagger";
 import underPressurePlugin from "@/plugins/under-pressure";
 import { sendError } from "@/utils/response";
-import type { TypeBoxTypeProvider } from "@fastify/type-provider-typebox";
-import Fastify, {
-  type FastifyError,
-  type FastifyInstance,
-  type FastifyReply,
-  type FastifyRequest,
-} from "fastify";
 
 /**
  * Build and configure the Fastify application.

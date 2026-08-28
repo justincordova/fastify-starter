@@ -1,3 +1,4 @@
+import { beforeEach, describe, expect, it } from "vitest";
 import {
   createExample,
   deleteExample,
@@ -6,7 +7,6 @@ import {
   resetExamples,
   updateExample,
 } from "@/modules/example/services";
-import { beforeEach, describe, expect, it } from "vitest";
 
 describe("Example Services", () => {
   beforeEach(() => {

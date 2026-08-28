@@ -1,5 +1,5 @@
-import { HTTP_STATUS } from "@/constants";
 import type { FastifyReply } from "fastify";
+import { HTTP_STATUS } from "@/constants";
 
 // Standard API response format
 export interface ApiResponse<T = unknown> {

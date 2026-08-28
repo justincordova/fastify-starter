@@ -1,17 +1,24 @@
-import { buildApp } from "@/app";
 import closeWithGrace from "close-with-grace";
+import type { FastifyInstance } from "fastify";
+import { buildApp } from "@/app";
 
 const SHUTDOWN_TIMEOUT = 10_000;
 
 const start = async (): Promise<void> => {
-  const app = await buildApp();
+  let app: FastifyInstance | undefined;
 
   try {
+    app = await buildApp();
     await app.ready();
     await app.listen({ port: app.config.PORT, host: app.config.HOST });
   } catch (err) {
-    app.log.error(err, "Failed to start server");
-    process.exit(1);
+    if (app) {
+      app.log.error(err, "Failed to start server");
+    } else {
+      console.error("Failed to initialize server", err);
+    }
+    process.exitCode = 1;
+    return;
   }
 
   closeWithGrace({ delay: SHUTDOWN_TIMEOUT }, async ({ signal, err }) => {
@@ -24,4 +31,4 @@ const start = async (): Promise<void> => {
   });
 };
 
-start();
+void start();

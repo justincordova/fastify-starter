@@ -1,7 +1,7 @@
-import { HTTP_STATUS } from "@/constants";
-import { sendCreated, sendError, sendSuccess } from "@/utils/response";
 import type { Static } from "@fastify/type-provider-typebox";
 import type { FastifyReply, FastifyRequest } from "fastify";
+import { HTTP_STATUS } from "@/constants";
+import { sendCreated, sendError, sendSuccess } from "@/utils/response";
 import type { CreateExampleBody, ExampleParams, UpdateExampleBody } from "./schemas";
 import {
   createExample,

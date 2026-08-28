@@ -1,7 +1,7 @@
-import { buildApp } from "@/app";
-import { resetExamples } from "@/modules/example/services";
 import type { FastifyInstance } from "fastify";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
+import { buildApp } from "@/app";
+import { resetExamples } from "@/modules/example/services";
 
 describe("Example Routes", () => {
   let app: FastifyInstance;

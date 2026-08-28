@@ -1,7 +1,7 @@
-import { EnvSchema } from "@/config/env";
 import fastifyEnv from "@fastify/env";
 import type { FastifyInstance } from "fastify";
 import fp from "fastify-plugin";
+import { EnvSchema } from "@/config/env";
 
 /**
  * Registers @fastify/env to validate process.env against EnvSchema at boot and

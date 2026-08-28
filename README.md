@@ -40,6 +40,7 @@ The server starts on `http://localhost:3000`.
 | `pnpm start` | Run the compiled server |
 | `pnpm test` | Run the test suite once |
 | `pnpm test:watch` | Run tests in watch mode |
+| `pnpm coverage` | Run tests and generate a coverage report |
 | `pnpm lint` | Lint with Biome |
 | `pnpm format` | Format with Biome |
 | `pnpm typecheck` | Type-check without emitting |
