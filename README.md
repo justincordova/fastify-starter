@@ -1,4 +1,4 @@
-# fastify-starter
+# Fastify Starter
 
 A production-grade Node.js + TypeScript [Fastify](https://fastify.dev) API starter.
 Idiomatic Fastify with schema-first validation, structured logging, security
@@ -18,8 +18,8 @@ plugins, OpenAPI docs, and a graceful lifecycle.
 
 ## Prerequisites
 
-- Node.js >= 22
-- [pnpm](https://pnpm.io) (via Corepack: `corepack enable`)
+- Node.js 22 or newer
+- [pnpm](https://pnpm.io) 11 or newer (via Corepack: `corepack enable`)
 
 ## Setup
 
