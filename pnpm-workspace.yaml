@@ -1,7 +1,7 @@
-# pnpm 11 blocks dependency build scripts by default and exits non-zero on
-# install until each is acknowledged. Biome and esbuild ship prebuilt binaries,
-# so their optional build scripts are not needed — acknowledge them as `false`
-# (do not build) to keep `pnpm install` clean in local, CI, and Docker.
+# pnpm blocks dependency build scripts by default and fails install until each
+# is acknowledged. Biome and esbuild ship prebuilt binaries, so their optional
+# build scripts are not needed — acknowledge them as `false` (do not build) to
+# keep `pnpm install` clean in local, CI, and Docker.
 allowBuilds:
   "@biomejs/biome": false
   esbuild: false

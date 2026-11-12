@@ -20,8 +20,9 @@ logging, schema-based validation, and native lifecycle management.
 - Auto-generated OpenAPI docs from route schemas (swagger + swagger-ui).
 - Boot-time env validation via `@fastify/env`, exposed as a typed `fastify.config`.
 - Biome for lint + format (replaces ESLint + Prettier); Vitest for tests.
-- Containerized (Docker + docker-compose), CI (GitHub Actions), enforced
-  pre-commit gate (Husky + lint-staged).
+- Containerized (hardened multi-stage Docker + docker-compose), CI (GitHub
+  Actions: checks + Docker build), Dependabot, enforced pre-commit gate
+  (Husky + lint-staged) and Conventional Commits (commitlint), `.editorconfig`.
 - Stdout-only structured logging (Pino JSON); no file logging or `logs/` dir.
 - `LICENSE` (ported from `express-starter`) and a `README` covering setup,
   scripts, structure, and the `/docs` endpoint.
@@ -92,25 +93,29 @@ reshapes the response (including validation 400s) into the standard envelope.
 
 ## Key Decisions
 
-| Decision | Choice | Rationale |
-|----------|--------|-----------|
-| Port philosophy | Idiomatic Fastify | Use native plugins/logging/validation rather than translating Express 1:1 |
-| Runtime / PM | Node + pnpm | Canonical Fastify setup; the Node reference, distinct from the Bun template |
-| Lint/format | Biome | One fast tool replacing ESLint + Prettier; single config |
-| Test runner | Vitest | Fast, Jest-compatible API, strong TS/ESM + path-alias support |
-| Dev / build | tsx (dev) + tsc + tsc-alias (build) | Instant dev reload; `tsc` compiles to `dist/`, `tsc-alias --resolve-full-paths` rewrites `@/*` aliases and adds `.js` extensions for Node ESM |
-| Validation | TypeBox + Fastify schemas | Typesafe JSON Schema; auto validation + serialization + inferred types |
-| Env | `@fastify/env` + TypeBox | Fail-fast boot validation; typed `fastify.config`; consistent with schema-first approach |
-| Entry point | `buildApp()` factory + `server.ts` | Testable via `inject()`; separates wiring from listen/shutdown |
-| Lifecycle | `close-with-grace` | Idiomatic graceful shutdown; replaces manual signal plumbing |
-| Response shape | Keep `ApiResponse` envelope + helpers | Parity with `express-starter` |
-| Logging output | Stdout-only Pino JSON | 12-factor / container-native; drops Winston file transports |
-| Body limit | 1MB (Fastify default) | Smaller attack surface; override per-route if needed |
-| Node version | 22 LTS | Current active LTS; pinned via `.nvmrc` + `engines` |
-| Module system | ESM (`type: module`, `module: ESNext`, `moduleResolution: Bundler`) | ESM output for modern Node; `Bundler` resolution permits extensionless `@/*` alias imports (NodeNext rejects them), with `tsc-alias` rewriting aliases at build |
-| Health route | `@fastify/under-pressure` built-in `/health` | Single source of truth; avoids conflict with a custom route |
-| Docs exposure | `/docs` in non-production only | Avoid publishing API schema publicly by default |
-| Repo name | `fastify-starter` | User preference; `package.json` name matches |
+| Decision           | Choice                                                                                      | Rationale                                                                                                                                                       |
+| ------------------ | ------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Port philosophy    | Idiomatic Fastify                                                                           | Use native plugins/logging/validation rather than translating Express 1:1                                                                                       |
+| Runtime / PM       | Node + pnpm                                                                                 | Canonical Fastify setup; the Node reference, distinct from the Bun template                                                                                     |
+| Lint/format        | Biome                                                                                       | One fast tool replacing ESLint + Prettier; single config                                                                                                        |
+| Test runner        | Vitest                                                                                      | Fast, Jest-compatible API, strong TS/ESM + path-alias support                                                                                                   |
+| Dev / build        | tsx (dev) + tsc + tsc-alias (build)                                                         | Instant dev reload; `tsc` compiles to `dist/`, `tsc-alias --resolve-full-paths` rewrites `@/*` aliases and adds `.js` extensions for Node ESM                   |
+| Validation         | TypeBox + Fastify schemas                                                                   | Typesafe JSON Schema; auto validation + serialization + inferred types                                                                                          |
+| Env                | `@fastify/env` + TypeBox                                                                    | Fail-fast boot validation; typed `fastify.config`; consistent with schema-first approach                                                                        |
+| Entry point        | `buildApp()` factory + `server.ts`                                                          | Testable via `inject()`; separates wiring from listen/shutdown                                                                                                  |
+| Lifecycle          | `close-with-grace`                                                                          | Idiomatic graceful shutdown; replaces manual signal plumbing                                                                                                    |
+| Response shape     | Keep `ApiResponse` envelope + helpers                                                       | Parity with `express-starter`                                                                                                                                   |
+| Logging output     | Stdout-only Pino JSON                                                                       | 12-factor / container-native; drops Winston file transports                                                                                                     |
+| Body limit         | 1MB (Fastify default)                                                                       | Smaller attack surface; override per-route if needed                                                                                                            |
+| Node version       | 26 LTS                                                                                      | Current active LTS (Oct 2026); pinned via `.nvmrc` + `engines`                                                                                                  |
+| Docker             | `node:26-slim` multi-stage, prod-only deps, `USER node`, node-fetch `HEALTHCHECK`           | Least privilege; no curl in the image; Node is PID 1 for SIGTERM                                                                                                |
+| CI                 | lint/typecheck/test/build + Docker build & smoke test; `contents: read`; concurrency cancel | Catches image breakage; least privilege                                                                                                                         |
+| Dependency updates | Dependabot weekly, grouped (npm, actions, docker)                                           | Automated, low-noise updates                                                                                                                                    |
+| Commits            | commitlint (conventional) via Husky `commit-msg`                                            | Enforces the existing convention                                                                                                                                |
+| Module system      | ESM (`type: module`, `module: ESNext`, `moduleResolution: Bundler`)                         | ESM output for modern Node; `Bundler` resolution permits extensionless `@/*` alias imports (NodeNext rejects them), with `tsc-alias` rewriting aliases at build |
+| Health route       | `@fastify/under-pressure` built-in `/health`                                                | Single source of truth; avoids conflict with a custom route                                                                                                     |
+| Docs exposure      | `/docs` in non-production only                                                              | Avoid publishing API schema publicly by default                                                                                                                 |
+| Repo name          | `fastify-starter`                                                                           | User preference; `package.json` name matches                                                                                                                    |
 
 ## Edge Cases & Constraints
 
@@ -129,15 +134,15 @@ reshapes the response (including validation 400s) into the standard envelope.
   error-status schemas (400/404) triggers `FST_ERR_FAILED_ERROR_SERIALIZATION`
   because the global handler's envelope is serialized against a mismatched
   schema. Error envelopes are guaranteed by the global handler.
-- pnpm 11 specifics (committed to the template): `pnpm-workspace.yaml` declares
-  `allowBuilds` with `@biomejs/biome: false` and `esbuild: false` — pnpm 11
-  exits non-zero on install until each dependency build script is acknowledged;
-  both ship prebuilt binaries so they are acknowledged as "do not build". `.npmrc`
-  sets `verify-deps-before-run=false` as additional robustness for the pre-script
-  deps check. The `prepare` script is `husky || true` so a husky failure cannot
-  break `pnpm install` in CI/Docker.
-- Node version pinned via `.nvmrc` + `engines`; pnpm pinned via `packageManager`
-  (Corepack).
+- pnpm 12 specifics (committed to the template): `pnpm-workspace.yaml` declares
+  `allowBuilds` with `@biomejs/biome: false` and `esbuild: false` — pnpm exits
+  non-zero on install until each dependency build script is acknowledged; both
+  ship prebuilt binaries so they are acknowledged as "do not build". The
+  `prepare` script is `husky || true` so a husky failure cannot break
+  `pnpm install` in CI/Docker.
+- Node version pinned via `.nvmrc` + `engines`; pnpm pinned via `packageManager`.
+  Node 25+ no longer bundles Corepack: Docker installs it via npm, and CI uses
+  `pnpm/action-setup` (reads `packageManager`).
 - Tests cover both layers: service unit tests and an `app.inject()` integration
   test for the example routes.
 - `ALLOWED_ORIGINS` is a comma-separated env string; the security plugin splits
@@ -146,6 +151,11 @@ reshapes the response (including validation 400s) into the standard envelope.
   throttled.
 - ESM constraints: relative imports may need explicit extensions; use
   `import.meta.url` instead of `__dirname` where a path is required.
+
+- Husky hooks call `lint-staged` / `commitlint` directly (Husky 9 puts
+  `node_modules/.bin` on `PATH`) rather than via `pnpm exec`, so commits work
+  even when the global pnpm/Corepack is outdated. Corepack < 0.34.6 cannot
+  launch pnpm 12's native binary.
 
 ## Open Questions
 
